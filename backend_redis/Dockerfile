@@ -1,0 +1,19 @@
+# backendredis/Dockerfile
+
+# Використайте базовий образ Python
+FROM python:3.9
+
+# Встановлення залежностей
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копіювання коду
+COPY . .
+
+# Налаштування змінних середовища
+ENV DJANGO_SETTINGS_MODULE=backend_redis.settings
+ENV DEBUG=False
+
+# Запуск сервера
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8001"]

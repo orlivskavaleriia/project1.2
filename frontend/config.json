@@ -1,0 +1,4 @@
+{
+  "BACKEND_RDS_URL": "/rds/test_connection/",
+  "BACKEND_REDIS_URL": "/redis/test_connection/"
+}

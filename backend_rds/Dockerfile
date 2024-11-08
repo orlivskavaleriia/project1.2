@@ -1,0 +1,21 @@
+FROM python:3.9
+
+# Встановлення залежностей
+WORKDIR /app
+COPY requirements.txt .  
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копіювання коду
+COPY . .
+
+# Встановлення змінних середовища для Django
+ENV DJANGO_SETTINGS_MODULE=backend_rds.settings
+ENV DEBUG=False
+
+# Копіювання wait_for_postgres.py у контейнер
+COPY wait_for_postgres.py /app/wait_for_postgres.py
+
+# Запуск сервера
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]  
+
+
