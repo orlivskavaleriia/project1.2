@@ -16,7 +16,10 @@ image: ruby:3.1-alpine
 # Аутентифікація до ECR
 before_script:
   - apk add --no-cache curl jq python3 py3-pip  # Використовуємо apk для встановлення пакетів
-  - pip3 install --upgrade awscli
+  - python3 -m venv /venv  # Створюємо віртуальне середовище
+  - . /venv/bin/activate  # Активуємо віртуальне середовище
+  - pip install --upgrade pip  # Оновлюємо pip
+  - pip install --upgrade awscli  # Встановлюємо awscli в віртуальне середовище
   - aws --version
   - echo "Logging into Amazon ECR..."
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
