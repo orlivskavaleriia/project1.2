@@ -1,0 +1,43 @@
+stages:
+  - build
+  - deploy
+
+# Задаємо змінні для доступу до ECR
+variables:
+  AWS_DEFAULT_REGION: "eu-central-1"
+  ECR_REGISTRY: "891612544658.dkr.ecr.eu-central-1.amazonaws.com"
+  BACKEND_RDS_REPO: "$ECR_REGISTRY/backend-rds"
+  BACKEND_REDIS_REPO: "$ECR_REGISTRY/backend_redis"
+  IMAGE_TAG: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"  
+
+# Аутентифікація до ECR
+before_script:
+  - apk add --no-cache curl jq python3 py3-pip
+  - pip3 install --upgrade awscli
+  - aws --version
+  - echo "Logging into Amazon ECR..."
+  - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+# Етап зборки Docker-образів
+build_backend_rds:
+  stage: build
+  script:
+    - echo "Building Docker image for backend_rds..."
+    - docker build -t $BACKEND_RDS_REPO:$IMAGE_TAG -f backend_rds/Dockerfile .
+
+build_backend_redis:
+  stage: build
+  script:
+    - echo "Building Docker image for backend_redis..."
+    - docker build -t $BACKEND_REDIS_REPO:$IMAGE_TAG -f backend_redis/Dockerfile .
+
+# Етап деплою
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying the application..."
+    # Деплойте образи за допомогою тегів (можна використовувати ECS або вручну на EC2)
+    # Наприклад, деплой на ECS або оновлення сервісів EC2 за допомогою Docker:
+    - echo "Deploying backend_rds image with tag $IMAGE_TAG"
+    - echo "Deploying backend_redis image with tag $IMAGE_TAG"
+    # Додати команду для деплою через ECS CLI, AWS CLI або вручну через SSH.
