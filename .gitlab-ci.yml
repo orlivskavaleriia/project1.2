@@ -9,7 +9,7 @@ variables:
   BACKEND_REDIS_REPO: "$ECR_REGISTRY/backend_redis"
   IMAGE_TAG: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
 
-# Використовуємо базовий образ Ubuntu
+# Базовий образ Ubuntu
 image: ubuntu:22.04
 
 before_script:
