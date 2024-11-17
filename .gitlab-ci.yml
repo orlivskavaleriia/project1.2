@@ -14,10 +14,12 @@ variables:
 image: docker:latest
 
 before_script:
-  - apk add --no-cache py3-pip  # Встановлення Python та PIP
-  - pip install --upgrade pip
-  - pip install --upgrade awscli
-  - aws --version
+  - apk add --no-cache py3-pip python3  # Встановлення Python та PIP
+  - python3 -m venv /venv  # Створення віртуального середовища
+  - . /venv/bin/activate  # Активуємо віртуальне середовище
+  - pip install --upgrade pip  # Оновлюємо pip в віртуальному середовищі
+  - pip install --upgrade awscli  # Встановлюємо AWS CLI
+  - aws --version  # Перевіряємо версію AWS CLI
   - echo "Logging into Amazon ECR..."
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
