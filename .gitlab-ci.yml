@@ -2,29 +2,26 @@ stages:
   - build
   - deploy
 
-# Задаємо змінні для доступу до ECR
 variables:
-  AWS_DEFAULT_REGION: "eu-central-1"  # Регіон Франкфурт (eu-central-1)
+  AWS_DEFAULT_REGION: "eu-central-1"
   ECR_REGISTRY: "891612544658.dkr.ecr.eu-central-1.amazonaws.com"
   BACKEND_RDS_REPO: "$ECR_REGISTRY/backend-rds"
   BACKEND_REDIS_REPO: "$ECR_REGISTRY/backend_redis"
-  IMAGE_TAG: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"  # Тег для Docker-образу: branch name - short commit
+  IMAGE_TAG: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
 
-# Вказуємо Alpine-образ Ruby, щоб використовувати apk
-image: ruby:3.1-alpine
+# Використовуємо базовий образ Ubuntu
+image: ubuntu:22.04
 
-# Аутентифікація до ECR
 before_script:
-  - apk add --no-cache curl jq python3 py3-pip  # Використовуємо apk для встановлення пакетів
-  - python3 -m venv /venv  # Створюємо віртуальне середовище
-  - . /venv/bin/activate  # Активуємо віртуальне середовище
-  - pip install --upgrade pip  # Оновлюємо pip
-  - pip install --upgrade awscli  # Встановлюємо awscli в віртуальне середовище
+  - apt-get update && apt-get install -y curl jq python3 python3-venv docker.io
+  - python3 -m venv /venv
+  - . /venv/bin/activate
+  - pip install --upgrade pip
+  - pip install --upgrade awscli
   - aws --version
   - echo "Logging into Amazon ECR..."
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
-# Етап зборки Docker-образів
 build_backend_rds:
   stage: build
   script:
@@ -37,12 +34,10 @@ build_backend_redis:
     - echo "Building Docker image for backend_redis..."
     - docker build -t $BACKEND_REDIS_REPO:$IMAGE_TAG -f backend_redis/Dockerfile .
 
-# Етап деплою
 deploy:
   stage: deploy
   script:
     - echo "Deploying the application..."
-    # Деплойте образи за допомогою тегів (можна використовувати ECS або вручну на EC2)
     - echo "Deploying backend_rds image with tag $IMAGE_TAG"
     - echo "Deploying backend_redis image with tag $IMAGE_TAG"
-    # Додати команду для деплою через ECS CLI, AWS CLI або вручну через SSH.
+    # Додати команди для деплою через AWS CLI, ECS CLI або вручну через SSH.
