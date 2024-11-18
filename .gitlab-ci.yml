@@ -10,7 +10,9 @@ build_and_push_backend_redis:
     - docker:dind
   before_script:
     - apk add --no-cache python3 py3-pip
-    - pip3 install awscli
+    - python3 -m venv venv  # Створення віртуального середовища
+    - . venv/bin/activate    # Активувати віртуальне середовище
+    - pip install awscli     # Встановити awscli у віртуальне середовище
     - aws --version  # Перевірка встановлення AWS CLI
     - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 891612544658.dkr.ecr.eu-central-1.amazonaws.com
   script:
@@ -25,7 +27,9 @@ build_and_push_backend_rds:
     - docker:dind
   before_script:
     - apk add --no-cache python3 py3-pip
-    - pip3 install awscli
+    - python3 -m venv venv  # Створення віртуального середовища
+    - . venv/bin/activate    # Активувати віртуальне середовище
+    - pip install awscli     # Встановити awscli у віртуальне середовище
     - aws --version  # Перевірка встановлення AWS CLI
     - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 891612544658.dkr.ecr.eu-central-1.amazonaws.com
   script:
