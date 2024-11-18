@@ -12,8 +12,8 @@ COPY . .
 ENV DJANGO_SETTINGS_MODULE=backend_rds.settings
 ENV DEBUG=False
 
-# Копіювання wait_for_postgres.py у контейнер
-COPY backend_rds/wait_for_postgres.py /app/wait_for_postgres.py
+# Копіюємо wait_for_postgres.py в контейнер
+COPY ./backend_rds/wait_for_postgres.py /app/wait_for_postgres.py
 
 # Запуск сервера
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]  
