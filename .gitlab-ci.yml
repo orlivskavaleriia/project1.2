@@ -6,6 +6,14 @@ variables:
   ECR_REGISTRY: "891612544658.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"  # Використовуємо конкретний реєстр для ECR
   IMAGE_TAG: "$CI_COMMIT_REF_NAME+$(echo $CI_COMMIT_SHA | head -c 7)"  # Визначаємо тег, що включає гілку і короткий хеш
 
+# Використовуємо Ubuntu як базовий образ
+image: ubuntu:20.04
+
+before_script:
+  # Оновлюємо пакети та встановлюємо AWS CLI
+  - apt-get update -y
+  - apt-get install -y awscli docker.io
+
 build_backend_rds:
   stage: build
   variables:
