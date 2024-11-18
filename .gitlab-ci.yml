@@ -8,31 +8,21 @@ variables:
   BACKEND_RDS_REPO: "$ECR_REGISTRY/backend-rds"
   BACKEND_REDIS_REPO: "$ECR_REGISTRY/backend_redis"
   IMAGE_TAG: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-  DOCKER_DRIVER: overlay2  # Задаємо драйвер для Docker
 
-# Використовуємо образ Docker для запуску пайплайну з Docker-in-Docker
-image: docker:latest
+# Використовуємо базовий образ Ubuntu
+image: ubuntu:22.04
 
 before_script:
-  - apk add --no-cache py3-pip python3  # Встановлення Python та PIP
-  - python3 -m venv /venv  # Створення віртуального середовища
-  - . /venv/bin/activate  # Активуємо віртуальне середовище
-  - pip install --upgrade pip  # Оновлюємо pip в віртуальному середовищі
-  - pip install --upgrade awscli  # Встановлюємо AWS CLI
-  - aws --version  # Перевіряємо версію AWS CLI
+  - apt-get update && apt-get install -y curl jq python3 python3-venv docker.io
+  - python3 -m venv /venv
+  - . /venv/bin/activate
+  - pip install --upgrade pip
+  - pip install --upgrade awscli
+  - aws --version
   - echo "Logging into Amazon ECR..."
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
-services:
-  - docker:19.03.12-dind  # Використовуємо DinD
-
 build_backend_rds:
-  stage: build
-  script:
-    - echo "Building Docker image for backend_rds..."
-    - docker build -t $BACKEND_RDS_REPO:$IMAGE_TAG -f backend_rds/Dockerfile .
-
-build_backend_redis:
   stage: build
   script:
     - echo "Building Docker image for backend_redis..."
