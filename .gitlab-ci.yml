@@ -21,13 +21,13 @@ before_script:
   - aws --version
   - echo "Logging into Amazon ECR..."
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+  - echo "ECR Registry $ECR_REGISTRY"
+  - echo "Commit Ref Name $CI_COMMIT_REF_NAME"
+  - echo "Commit Short SHA $CI_COMMIT_SHORT_SHA"
 
 build_backend_rds:
   stage: build
   script:
-    - echo "ECR Registry $ECR_REGISTRY"
-    - echo "Commit Ref Name $CI_COMMIT_REF_NAME"
-    - echo "Commit Short SHA $CI_COMMIT_SHORT_SHA"
     - echo "Building Docker image for backend_rds..."
     - docker build -t $BACKEND_RDS_REPO:$IMAGE_TAG -f backend_rds/Dockerfile .
 
