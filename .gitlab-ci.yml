@@ -1,21 +1,22 @@
+image: docker:20.10
+
+services:
+  - docker:20.10-dind
+
+variables:
+  ECR_REGISTRY: "891612544658.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"  # Використовуємо конкретний реєстр для ECR
+  DOCKER_DRIVER: overlay2
+  IMAGE_TAG: "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA:0:7}"  # Включаємо ім'я гілки та короткий хеш
+
 stages:
   - build
   - deploy
 
-variables:
-  ECR_REGISTRY: "891612544658.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"  # Використовуємо конкретний реєстр для ECR
-  IMAGE_TAG: "$CI_COMMIT_REF_NAME+$(echo $CI_COMMIT_SHA | head -c 7)"  # Визначаємо тег, що включає гілку і короткий хеш
-
-# Використовуємо Ubuntu як базовий образ
-image: ubuntu:20.04
-
-before_script:
-  # Оновлюємо пакети та встановлюємо AWS CLI
-  - apt-get update -y
-  - apt-get install -y awscli docker.io
-
 build_backend_rds:
   stage: build
+  image: docker:20.10
+  before_script:
+    - apk add --no-cache aws-cli
   variables:
     ECR_REPOSITORY: "backend-rds"  # Репозиторій для backend_rds
   script:
@@ -26,6 +27,9 @@ build_backend_rds:
 
 build_backend_redis:
   stage: build
+  image: docker:20.10
+  before_script:
+    - apk add --no-cache aws-cli
   variables:
     ECR_REPOSITORY: "backend_redis"  # Репозиторій для backend_redis
   script:
@@ -36,6 +40,9 @@ build_backend_redis:
 
 deploy:
   stage: deploy
+  image: docker:20.10
+  before_script:
+    - apk add --no-cache aws-cli openssh
   script:
     - echo "$SSH_PRIVATE_KEY" > private_key.pem
     - chmod 600 private_key.pem
