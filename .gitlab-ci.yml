@@ -2,48 +2,38 @@ stages:
   - build
   - deploy
 
-# Docker Build and Push to ECR
-build_and_push_backend_redis:
-  stage: build
-  image: docker:latest
-  services:
-    - docker:dind
-  before_script:
-    - apk add --no-cache python3 py3-pip
-    - python3 -m venv venv  # Створення віртуального середовища
-    - . venv/bin/activate    # Активувати віртуальне середовище
-    - pip install awscli     # Встановити awscli у віртуальне середовище
-    - aws --version  # Перевірка встановлення AWS CLI
-    - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 891612544658.dkr.ecr.eu-central-1.amazonaws.com
-  script:
-    - docker build -t backend_redis ./backend_redis
-    - docker tag backend_redis:latest 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest
-    - docker push 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest
+variables:
+  ECR_REGISTRY: "891612544658.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"  # Використовуємо конкретний реєстр для ECR
+  IMAGE_TAG: "$CI_COMMIT_REF_NAME+$(echo $CI_COMMIT_SHA | head -c 7)"  # Визначаємо тег, що включає гілку і короткий хеш
 
-build_and_push_backend_rds:
+build_backend_rds:
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
-  before_script:
-    - apk add --no-cache python3 py3-pip
-    - python3 -m venv venv  # Створення віртуального середовища
-    - . venv/bin/activate    # Активувати віртуальне середовище
-    - pip install awscli     # Встановити awscli у віртуальне середовище
-    - aws --version  # Перевірка встановлення AWS CLI
-    - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 891612544658.dkr.ecr.eu-central-1.amazonaws.com
+  variables:
+    ECR_REPOSITORY: "backend-rds"  # Репозиторій для backend_rds
   script:
-    - docker build -t backend_rds ./backend_rds
-    - docker tag backend_rds:latest 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest
-    - docker push 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+    - cd backend_rds
+    - docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+    - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-# Deploy to EC2
-deploy_backend_to_ec2:
+build_backend_redis:
+  stage: build
+  variables:
+    ECR_REPOSITORY: "backend_redis"  # Репозиторій для backend_redis
+  script:
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+    - cd backend_redis
+    - docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+    - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+deploy:
   stage: deploy
-  image: ruby:2.7
-  before_script:
-    - apt-get update -y
-    - apt-get install -y sshpass
   script:
-    - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 891612544658.dkr.ecr.eu-central-1.amazonaws.com
-    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ubuntu@18.197.122.99 'docker pull 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest && docker pull 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest && docker-compose -f /home/ubuntu/project1/docker-compose.yml up -d'
+    - echo "$SSH_PRIVATE_KEY" > private_key.pem
+    - chmod 600 private_key.pem
+    - ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@$EC2_HOST "
+        aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY;
+        docker pull $ECR_REGISTRY/backend-rds:$IMAGE_TAG;
+        docker pull $ECR_REGISTRY/backend_redis:$IMAGE_TAG;
+        docker-compose down;
+        docker-compose up -d"
