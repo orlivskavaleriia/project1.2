@@ -2,47 +2,35 @@ stages:
   - build
   - deploy
 
-variables:
-  AWS_DEFAULT_REGION: "eu-central-1"
-  ECR_REGISTRY: "891612544658.dkr.ecr.eu-central-1.amazonaws.com"
-  BACKEND_RDS_REPO: "$ECR_REGISTRY/backend-rds"
-  BACKEND_REDIS_REPO: "$ECR_REGISTRY/backend_redis"
-  IMAGE_TAG: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-
-# Базовий образ Ubuntu
-image: ubuntu:22.04
-
-before_script:
-  - apt-get update && apt-get install -y curl jq python3 python3-venv docker.io
-  - python3 -m venv /venv
-  - . /venv/bin/activate
-  - pip install --upgrade pip
-  - pip install --upgrade awscli
-  - aws --version
-  - echo "Logging into Amazon ECR..."
-  - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-  - echo "ECR Registry $ECR_REGISTRY"
-  - echo "Commit Ref Name $CI_COMMIT_REF_NAME"
-  - echo "Commit Short SHA $CI_COMMIT_SHORT_SHA"
-  - env
-
-build_backend_rds:
+# Docker Build and Push to ECR
+build_and_push_backend_redis:
   stage: build
+  image: docker:latest
+  services:
+    - docker:dind
   script:
-    - echo "Building Docker image for backend_rds..."
-    - docker build -t $BACKEND_RDS_REPO:$IMAGE_TAG -f backend_rds/Dockerfile .
+    - docker login -u AWS -p $(aws ecr get-login-password --region eu-central-1) 891612544658.dkr.ecr.eu-central-1.amazonaws.com
+    - docker build -t backend_redis .
+    - docker tag backend_redis:latest 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest
+    - docker push 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest
 
-
-build_backend_redis:
+build_and_push_backend_rds:
   stage: build
+  image: docker:latest
+  services:
+    - docker:dind
   script:
-    - echo "Building Docker image for backend_redis..."
-    - docker build -t $BACKEND_REDIS_REPO:$IMAGE_TAG -f backend_redis/Dockerfile .
+    - docker login -u AWS -p $(aws ecr get-login-password --region eu-central-1) 891612544658.dkr.ecr.eu-central-1.amazonaws.com
+    - docker build -t backend_rds .
+    - docker tag backend_rds:latest 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest
+    - docker push 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest
 
-deploy:
+# Deploy to EC2
+deploy_backend_to_ec2:
   stage: deploy
+  image: ruby:2.7
+  before_script:
+    - apt-get update -y
+    - apt-get install -y sshpass
   script:
-    - echo "Deploying the application..."
-    - echo "Deploying backend_rds image with tag $IMAGE_TAG"
-    - echo "Deploying backend_redis image with tag $IMAGE_TAG"
-    # Додати команди для деплою через AWS CLI, ECS CLI або вручну через SSH.
+    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ubuntu@18.197.122.99 'docker pull 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest && docker pull 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest && docker-compose -f /path/to/your/docker-compose.yml up -d'
