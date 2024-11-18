@@ -47,8 +47,7 @@ deploy:
     # Обробка приватного SSH ключа
     - echo "$SSH_PRIVATE_KEY" > private_key.pem
     - chmod 600 private_key.pem
-    - sudo wget https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -O /usr/local/bin/yq
-    - sudo chmod +x /usr/local/bin/yq
+
   script:
     # Підключення до EC2 і виконання команд на сервері
     - ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@$EC2_HOST "
