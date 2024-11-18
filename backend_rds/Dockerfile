@@ -16,6 +16,4 @@ ENV DEBUG=False
 COPY backend_rds/wait_for_postgres.py /app/wait_for_postgres.py
 
 # Запуск сервера
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]  
-
-
+CMD ["python", "backend_rds/manage.py", "runserver", "0.0.0.0:8000"]  
