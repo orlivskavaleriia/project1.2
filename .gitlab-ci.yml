@@ -8,9 +8,13 @@ build_and_push_backend_redis:
   image: docker:latest
   services:
     - docker:dind
+  before_script:
+    - apk add --no-cache python3 py3-pip
+    - pip3 install awscli
+    - aws --version  # Перевірка встановлення AWS CLI
+    - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 891612544658.dkr.ecr.eu-central-1.amazonaws.com
   script:
-    - docker login -u AWS -p $(aws ecr get-login-password --region eu-central-1) 891612544658.dkr.ecr.eu-central-1.amazonaws.com
-    - docker build -t backend_redis .
+    - docker build -t backend_redis ./backend_redis
     - docker tag backend_redis:latest 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest
     - docker push 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest
 
@@ -19,9 +23,13 @@ build_and_push_backend_rds:
   image: docker:latest
   services:
     - docker:dind
+  before_script:
+    - apk add --no-cache python3 py3-pip
+    - pip3 install awscli
+    - aws --version  # Перевірка встановлення AWS CLI
+    - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 891612544658.dkr.ecr.eu-central-1.amazonaws.com
   script:
-    - docker login -u AWS -p $(aws ecr get-login-password --region eu-central-1) 891612544658.dkr.ecr.eu-central-1.amazonaws.com
-    - docker build -t backend_rds .
+    - docker build -t backend_rds ./backend_rds
     - docker tag backend_rds:latest 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest
     - docker push 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest
 
@@ -33,4 +41,5 @@ deploy_backend_to_ec2:
     - apt-get update -y
     - apt-get install -y sshpass
   script:
-    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ubuntu@18.197.122.99 'docker pull 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest && docker pull 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest && docker-compose -f /path/to/your/docker-compose.yml up -d'
+    - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 891612544658.dkr.ecr.eu-central-1.amazonaws.com
+    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ubuntu@18.197.122.99 'docker pull 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_redis:latest && docker pull 891612544658.dkr.ecr.eu-central-1.amazonaws.com/backend_rds:latest && docker-compose -f /home/ubuntu/project1/docker-compose.yml up -d'
