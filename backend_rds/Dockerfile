@@ -2,7 +2,7 @@ FROM python:3.9
 
 # Встановлення залежностей
 WORKDIR /app
-COPY requirements.txt .  
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копіювання коду
@@ -16,4 +16,4 @@ ENV DEBUG=False
 COPY ./backend_rds/wait_for_postgres.py /app/wait_for_postgres.py
 
 # Запуск сервера
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]  
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
