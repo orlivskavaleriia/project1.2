@@ -9,7 +9,7 @@ variables:
   BACKEND_REDIS_REPO: "$ECR_REGISTRY/backend_redis"
   IMAGE_TAG: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
 
-# Використовуємо базовий образ Ubuntu
+# Базовий образ Ubuntu
 image: ubuntu:22.04
 
 before_script:
@@ -23,6 +23,12 @@ before_script:
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
 build_backend_rds:
+  stage: build
+  script:
+    - echo "Building Docker image for backend_rds..."
+    - docker build -t $BACKEND_RDS_REPO:$IMAGE_TAG -f backend_rds/Dockerfile .
+
+build_backend_redis:
   stage: build
   script:
     - echo "Building Docker image for backend_redis..."
