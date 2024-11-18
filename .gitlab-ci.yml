@@ -24,6 +24,7 @@ before_script:
   - echo "ECR Registry $ECR_REGISTRY"
   - echo "Commit Ref Name $CI_COMMIT_REF_NAME"
   - echo "Commit Short SHA $CI_COMMIT_SHORT_SHA"
+  - env
 
 build_backend_rds:
   stage: build
