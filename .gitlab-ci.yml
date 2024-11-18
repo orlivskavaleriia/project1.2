@@ -24,7 +24,7 @@ before_script:
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
 services:
-  - docker:19.03.12-dind  # Використовуємо Docker-in-Docker
+  - docker:19.03.12-dind  # Використовуємо DinD
 
 build_backend_rds:
   stage: build
