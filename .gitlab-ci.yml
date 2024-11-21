@@ -4,55 +4,45 @@ services:
   - docker:20.10-dind
 
 variables:
-  ECR_REGISTRY: "891612544658.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"  # Використовуємо конкретний реєстр для ECR
+  ECR_REGISTRY: "891612544658.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
   DOCKER_DRIVER: overlay2
-  IMAGE_TAG: "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA:0:7}"  # Включаємо ім'я гілки та короткий хеш
+  IMAGE_TAG: "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}"
+  SERVICES: "backend-rds backend-redis"
 
 stages:
   - build
   - deploy
 
-build_backend_rds:
+build:
   stage: build
   image: docker:20.10
   before_script:
     - apk add --no-cache aws-cli
-  variables:
-    ECR_REPOSITORY: "backend-rds"  # Репозиторій для backend_rds
   script:
     - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-    - cd backend_rds
-    - docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-    - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-build_backend_redis:
-  stage: build
-  image: docker:20.10
-  before_script:
-    - apk add --no-cache aws-cli
-  variables:
-    ECR_REPOSITORY: "backend_redis"  # Репозиторій для backend_redis
-  script:
-    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-    - cd backend_redis
-    - docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-    - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    - for SERVICE in $SERVICES; do
+        echo "Building image for $SERVICE...";
+        cd $SERVICE &&
+        docker build -t $ECR_REGISTRY/$SERVICE:$IMAGE_TAG . &&
+        docker push $ECR_REGISTRY/$SERVICE:$IMAGE_TAG &&
+        cd ..;
+      done
 
 deploy:
   stage: deploy
   image: alpine:latest
   before_script:
-    # Встановлення SSH клієнта
     - apk add --no-cache openssh
-    # Обробка приватного SSH ключа
     - echo "$SSH_PRIVATE_KEY" > private_key.pem
     - chmod 600 private_key.pem
-
   script:
-    # Підключення до EC2 і виконання команд на сервері
-    - ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@$EC2_HOST "
-      aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REGISTRY &&
-      cd /home/ubuntu/project1 &&
-      yq e '.services.web.image = \"$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG\"' -i docker-compose.yml &&
-      docker-compose down &&
-      docker-compose up -d"
+    - |
+      ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@$EC2_HOST "
+        aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY &&
+        cd /home/ubuntu/project1 &&
+        for SERVICE in $SERVICES; do
+          echo \"Updating service: \$SERVICE\";
+          yq e '.services.[\"'\$SERVICE'\"].image = \"$ECR_REGISTRY/\$SERVICE:$IMAGE_TAG\"' -i docker-compose.yml;
+        done &&
+        docker-compose down &&
+        docker-compose up -d"
