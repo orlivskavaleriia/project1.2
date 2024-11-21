@@ -51,10 +51,8 @@ deploy:
   script:
     # Підключення до EC2 і виконання команд на сервері
     - ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@$EC2_HOST "
-      aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REGISTRY &&
+      aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin $ECR_REGISTRY &&
       cd App_Py &&
       yq e '.services.web.image = \"$ECR_REGISTRY/$ECR_REPOSITORY:latest\"' -i docker-compose.yml &&
       docker-compose down &&
       docker-compose up -d"
-      
-
