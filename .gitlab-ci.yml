@@ -40,7 +40,7 @@ deploy:
       ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@$EC2_HOST "
         aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY &&
         cd /home/ubuntu/project1 &&
-        for SERVICE in $SERVICES; do
+        for SERVICE in \$SERVICES; do
           echo \"Updating service: \$SERVICE\";
           yq e '.services.[\"'\$SERVICE'\"].image = \"$ECR_REGISTRY/\$SERVICE:$IMAGE_TAG\"' -i docker-compose.yml;
         done &&
