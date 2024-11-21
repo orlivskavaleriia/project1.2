@@ -7,7 +7,7 @@ variables:
   ECR_REGISTRY: "891612544658.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
   DOCKER_DRIVER: overlay2
   IMAGE_TAG: "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}"
-  SERVICES: "backend-rds backend-redis"
+  SERVICES: "backend_rds backend_redis"
 
 stages:
   - build
