@@ -49,4 +49,4 @@ deploy:
         done
         docker-compose down
         docker-compose up -d
-        EOF
+      EOF
