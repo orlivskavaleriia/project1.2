@@ -44,7 +44,7 @@ deploy:
         export IMAGE_TAG="${IMAGE_TAG}"
         for SERVICE in \$SERVICES; do 
           echo \"Updating service: \$SERVICE\"; 
-          IMAGE_NAME="891612544658.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com\${SERVICE}:\${IMAGE_TAG}"
+          IMAGE_NAME="891612544658.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/\${SERVICE}:\${IMAGE_TAG}"
           yq eval -i ".services.\\"\${SERVICE}\\".image = \"\${IMAGE_NAME}\"" docker-compose.yml
         done
         docker-compose down
