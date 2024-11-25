@@ -1,4 +1,0 @@
-{
-  "BACKEND_RDS_URL": "http://project1-alb-1720343581.eu-central-1.elb.amazonaws.com:8000/test_connection/",
-  "BACKEND_REDIS_URL": "http://project1-alb-1720343581.eu-central-1.elb.amazonaws.com:8001/test_connection/"
-}
