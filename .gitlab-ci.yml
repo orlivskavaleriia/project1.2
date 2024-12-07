@@ -13,7 +13,7 @@ variables:
   EC2_PUBLIC_IP: $CI_EC2_PUBLIC_IP
 
 services:
-  - docker:19.03.12-DinD
+  - docker:20.10-dind
 
 before_script:
   - apk add --no-cache python3 py3-pip
