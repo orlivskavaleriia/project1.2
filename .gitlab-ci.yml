@@ -17,7 +17,8 @@ services:
 
 before_script:
   - apk add --no-cache python3 py3-pip
-  - pip install awscli 
+  - apt-get update && apt-get install -y python3-pip
+  - pip3 install awscli 
 
 build:
   stage: build
