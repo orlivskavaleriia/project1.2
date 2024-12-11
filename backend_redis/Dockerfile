@@ -22,5 +22,9 @@ RUN python manage.py check
 # Налаштовуємо порти
 EXPOSE 8001
 
+# Встановлюємо змінні оточення для Redis
+ENV REDIS_HOST=project2-redis-wldfpj.serverless.euc1.cache.amazonaws.com:6379
+ENV REDIS_PORT=6379
+
 # Запуск сервісу
 CMD ["gunicorn", "backend_redis.wsgi:application", "--bind", "0.0.0.0:8001"]

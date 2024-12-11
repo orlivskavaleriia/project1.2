@@ -2,16 +2,17 @@ version: '3.8'
 
 services:
   backend_rds:
-    image: abc
+    image: postgres:13
+    command: ["sh", "-c", "echo $POSTGRES_PASSWORD && sleep 3600"]
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=postgres
+      - DB_HOST=${DB_HOST}
       - DB_PORT=5432
-      - CORS_ALLOWED_ORIGINS=http://d1cjqbfzvk294.cloudfront.net
+      - CORS_ALLOWED_ORIGINS=http://dwl2e3x2kooo5.cloudfront.net
       - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT}/${DB_NAME}
     ports:
       - "8000:8000"
@@ -22,14 +23,14 @@ services:
       - redis
 
   backend_redis:
-    image: abc
+    image: redis:alpine
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
-      - REDIS_HOST=redis
+      - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=6379
       - REDIS_DB=${REDIS_DB}
-      - CORS_ALLOWED_ORIGINS=http://d1cjqbfzvk294.cloudfront.net
+      - CORS_ALLOWED_ORIGINS=http://dwl2e3x2kooo5.cloudfront.net
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "8001:8001"
