@@ -1,0 +1,52 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  AWS_REGION: "eu-central-1"
+  IMAGE_TAG: "latest"
+  BACKEND_RDS_DOCKER_REGISTRY: $CI_ECR_BACKEND_RDS_REPO_URI  
+  BACKEND_REDIS_DOCKER_REGISTRY: $CI_ECR_BACKEND_REDIS_REPO_URI  
+  FRONTEND_DOCKER_REGISTRY: $CI_ECR_FRONTEND_REPO_URI  
+  S3_BUCKET: $CI_S3_BUCKET_NAME
+  CLOUDFRONT_DISTRIBUTION_ID: $CI_CLOUDFRONT_ID
+  EC2_PUBLIC_IP: $CI_EC2_PUBLIC_IP
+
+services:
+  - docker:20.10-dind
+
+before_script:
+  - apt-get update && apt-get install -y python3-pip
+  - pip3 install awscli 
+
+build:
+  stage: build
+  script:
+    - echo "Building Docker images..."
+    - docker build -t backend_rds ./backend_rds
+    - docker build -t backend_redis ./backend_redis
+    - docker build -t frontend ./frontend
+    - echo "Logging in to ECR..."
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $BACKEND_RDS_DOCKER_REGISTRY
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $BACKEND_REDIS_DOCKER_REGISTRY
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $FRONTEND_DOCKER_REGISTRY
+    - echo "Pushing Docker images to ECR..."
+    - docker tag backend_rds:latest $BACKEND_RDS_DOCKER_REGISTRY:$IMAGE_TAG
+    - docker tag backend_redis:latest $BACKEND_REDIS_DOCKER_REGISTRY:$IMAGE_TAG
+    - docker tag frontend:latest $FRONTEND_DOCKER_REGISTRY:$IMAGE_TAG
+    - docker push $BACKEND_RDS_DOCKER_REGISTRY:$IMAGE_TAG
+    - docker push $BACKEND_REDIS_DOCKER_REGISTRY:$IMAGE_TAG
+    - docker push $FRONTEND_DOCKER_REGISTRY:$IMAGE_TAG
+  only:
+    - main
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying to EC2..."
+    - ssh -i /path/to/backend_keys.pem ubuntu@$EC2_PUBLIC_IP "docker-compose down && docker-compose up -d --build"
+    - echo "Syncing S3 with CloudFront..."
+    - aws s3 sync ./frontend/dist/ s3://$S3_BUCKET/ --delete
+    - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+  only:
+    - main
