@@ -62,7 +62,7 @@ services:
     networks:
       - backend_network
 
-# Define custom network for communication between services
+# Def³ne custom network for communication between services
 networks:
   backend_network:
     driver: bridge
