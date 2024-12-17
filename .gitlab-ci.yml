@@ -39,7 +39,7 @@ deploy:
     - | 
       ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@$EC2_PUBLIC_IP << EOF
         aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY 
-        cd /home/ubuntu/project1
+        cd /home/ubuntu/project2
         export SERVICES="${SERVICES}" 
         export IMAGE_TAG="${IMAGE_TAG}"
         for SERVICE in \$SERVICES; do 
