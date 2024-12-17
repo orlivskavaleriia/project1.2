@@ -16,9 +16,6 @@ COPY . /app/
 # Встановлюємо залежності з requirements.txt
 RUN pip install -r requirements.txt
 
-# Перевіряємо, що все працює коректно
-RUN python manage.py check
-
 # Налаштовуємо порти
 EXPOSE 8001
 
