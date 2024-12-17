@@ -8,7 +8,6 @@ variables:
   DOCKER_DRIVER: overlay2
   IMAGE_TAG: "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}"
   SERVICES: "backend_rds backend_redis"
-  CORS_ALLOWED_ORIGINS: "http://dwl2e3x2kooo5.cloudfront.net"
 
 stages:
   - build
