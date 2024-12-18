@@ -57,7 +57,5 @@ deploy-frontend:
   before_script:
     - apk add --no-cache aws-cli
   script:
-    # Завантаження оновлених файлів у S3
     - aws s3 sync ./frontend/dist s3://$S3_BUCKET --delete
-    # Інвалідоване кешу CloudFront
     - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
